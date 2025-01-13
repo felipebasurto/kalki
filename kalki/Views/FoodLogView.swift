@@ -309,8 +309,8 @@ struct FoodLogView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollView {
+        ScrollView {
+            VStack(spacing: 16) {
                 GeometryReader { geometry in
                     Color.clear.preference(
                         key: ScrollOffsetPreferenceKey.self,
@@ -319,40 +319,37 @@ struct FoodLogView: View {
                 }
                 .frame(height: 0)
                 
-                ZStack {
-                    Color(.systemBackground)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 0) {
-                        VStack(spacing: 16) {
-                            calorieCircleView
-                                .padding(.top, 16)
-                            macroProgressView
-                            dateNavigationView
-                            
-                            if foodsByMeal.flatMap({ $0.foods }).isEmpty {
-                                emptyStateView
-                            } else {
-                                foodSectionsView(foodsByMeal)
-                                    .padding(.horizontal)
-                            }
-                            
-                            Color.clear.frame(height: 80)
-                        }
-                    }
+                calorieCircleView
+                    .padding(.top, 8)
+                macroProgressView
+                dateNavigationView
+                
+                if foodsByMeal.flatMap({ $0.foods }).isEmpty {
+                    emptyStateView
+                } else {
+                    foodSectionsView(foodsByMeal)
+                        .padding(.horizontal)
                 }
+                
+                Color.clear.frame(height: 80)
             }
-            .coordinateSpace(name: "scroll")
-            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                scrollOffset = value
-                Task { @MainActor in
-                    viewModel.updateScrollOffset(value)
-                }
-            }
-            
+        }
+        .coordinateSpace(name: "scroll")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+            viewModel.updateScrollOffset(value)
+        }
+        .overlay(alignment: .bottom) {
             addButton
         }
-        .navigationTitle("Food Log")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                LogoView()
+                    .opacity(viewModel.shouldShowLogo ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.shouldShowLogo)
+            }
+        }
+        .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $showingAddFood) {
             AddFoodView(viewModel: viewModel, selectedDate: selectedDate)
         }

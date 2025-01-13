@@ -9,11 +9,11 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationStack {
-            LogoView()
             Form {
                 Section("Profile & Goals") {
                     NavigationLink("Calculate Needs") {
                         CalcView()
+                            .navigationTitle("Calculate Needs")
                     }
                 }
                 
@@ -48,7 +48,12 @@ struct SettingsView: View {
                     }
                 }
             }
-            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    LogoView()
+                }
+            }
             .fullScreenCover(isPresented: $showingOnboarding) {
                 OnboardingView()
             }

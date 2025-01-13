@@ -27,8 +27,8 @@ struct ContentView: View {
             if !hasCompletedOnboarding {
                 OnboardingView()
             } else {
-                NavigationStack {
-                    TabView(selection: $selectedTab) {
+                TabView(selection: $selectedTab) {
+                    NavigationStack {
                         FoodLogView(viewModel: foodLogViewModel)
                             .toolbar {
                                 ToolbarItem(placement: .principal) {
@@ -36,28 +36,35 @@ struct ContentView: View {
                                         .opacity(foodLogViewModel.shouldShowLogo ? 1 : 0)
                                 }
                             }
-                            .toolbarBackground(.hidden, for: .navigationBar)
-                            .tabItem {
-                                Label("Food Log", systemImage: "list.bullet")
-                            }
-                            .tag(0)
-                    
-                        
-                        SettingsView()
-                            .toolbar {
-                                ToolbarItem(placement: .principal) {
-                                    Color.clear.frame(height: 8)
-                                }
-                            }
-                            .toolbarBackground(.visible, for: .navigationBar)
-                            .tabItem {
-                                Label("Settings", systemImage: "gear")
-                            }
-                            .tag(3)
                     }
-                    .tint(AppTheme.accentColor)
+                    .tabItem {
+                        Label("Food Log", systemImage: "list.bullet")
+                    }
+                    .tag(0)
+                    
+                    NavigationStack {
+                        ProgressCalendarView(exerciseService: exerciseService, foodLogViewModel: foodLogViewModel)
+                            .navigationBarTitleDisplayMode(.inline)
+                    }
+                    .tabItem {
+                        Label("Progress", systemImage: "calendar")
+                    }
+                    .tag(1)
+                    
+                    NavigationStack {
+                        SettingsView()
+                    }
+                    .tabItem {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    .tag(2)
                 }
+                .tint(AppTheme.accentColor)
             }
         }
     }
+}
+
+#Preview {
+    ContentView()
 } 

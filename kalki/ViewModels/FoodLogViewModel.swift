@@ -78,8 +78,6 @@ public class FoodLogViewModel: ObservableObject {
     }
     
     func updateScrollOffset(_ offset: CGFloat) {
-        withAnimation(.easeInOut(duration: 0.2)) {
-            shouldShowLogo = offset > -50
-        }
+        shouldShowLogo = offset > -10
     }
 } 

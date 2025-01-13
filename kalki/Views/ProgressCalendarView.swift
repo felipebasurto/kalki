@@ -114,195 +114,206 @@ struct ProgressCalendarView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                // Calendar grid
-                VStack(spacing: 8) {
-                    // Month navigation
-                    HStack {
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                month = Calendar.current.date(byAdding: .month, value: -1, to: month) ?? month
-                            }
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .imageScale(.large)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Text(monthFormatter.string(from: month))
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(AppTheme.text.primary)
-                        
-                        Spacer()
-                        
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                let newMonth = Calendar.current.date(byAdding: .month, value: 1, to: month) ?? month
-                                if newMonth <= Date() {
-                                    month = newMonth
+            ScrollView {
+                GeometryReader { geometry in
+                    Color.clear.preference(
+                        key: ScrollOffsetPreferenceKey.self,
+                        value: geometry.frame(in: .named("scroll")).minY
+                    )
+                }
+                .frame(height: 0)
+                
+                VStack(spacing: 16) {
+                    // Calendar grid
+                    VStack(spacing: 8) {
+                        // Month navigation
+                        HStack {
+                            Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    month = Calendar.current.date(byAdding: .month, value: -1, to: month) ?? month
                                 }
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .imageScale(.large)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
                             }
-                        } label: {
-                            Image(systemName: "chevron.right")
-                                .imageScale(.large)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.secondary)
-                        }
-                        .disabled(Calendar.current.isDate(month, equalTo: Date(), toGranularity: .month))
-                    }
-                    .padding(.horizontal)
-                    .overlay(alignment: .trailing) {
-                        Button {
-                            showingAchievements = true
-                        } label: {
-                            Image(systemName: "trophy.fill")
-                                .font(.system(size: 20))
-                                .foregroundStyle(AppTheme.highlightColor)
-                                .padding(8)
-                                .background {
-                                    Circle()
-                                        .fill(.background)
-                                        .shadow(color: Color(.systemGray4).opacity(0.3), radius: 4, x: 0, y: 2)
+                            
+                            Spacer()
+                            
+                            Text(monthFormatter.string(from: month))
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .foregroundStyle(AppTheme.text.primary)
+                            
+                            Spacer()
+                            
+                            Button {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                    let newMonth = Calendar.current.date(byAdding: .month, value: 1, to: month) ?? month
+                                    if newMonth <= Date() {
+                                        month = newMonth
+                                    }
                                 }
+                            } label: {
+                                Image(systemName: "chevron.right")
+                                    .imageScale(.large)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .disabled(Calendar.current.isDate(month, equalTo: Date(), toGranularity: .month))
                         }
-                        .offset(x: 44)
+                        .padding(.horizontal)
+                        .overlay(alignment: .trailing) {
+                            Button {
+                                showingAchievements = true
+                            } label: {
+                                Image(systemName: "trophy.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(AppTheme.highlightColor)
+                                    .padding(8)
+                                    .background {
+                                        Circle()
+                                            .fill(.background)
+                                            .shadow(color: Color(.systemGray4).opacity(0.3), radius: 4, x: 0, y: 2)
+                                    }
+                            }
+                            .offset(x: 44)
+                        }
+                        
+                        ProgressCalendarGrid(
+                            month: month,
+                            progressMap: viewModel.dailyProgressMap,
+                            calorieGoal: Double(viewModel.dailyCalorieGoal) ?? 2000,
+                            proteinGoal: Double(viewModel.dailyProteinGoal) ?? 150,
+                            selectedDate: $viewModel.selectedDate,
+                            isPartOfStreak: isPartOfStreak
+                        )
+                        .padding(.horizontal)
                     }
                     
-                    ProgressCalendarGrid(
-                        month: month,
-                        progressMap: viewModel.dailyProgressMap,
-                        calorieGoal: Double(viewModel.dailyCalorieGoal) ?? 2000,
-                        proteinGoal: Double(viewModel.dailyProteinGoal) ?? 150,
-                        selectedDate: $viewModel.selectedDate,
-                        isPartOfStreak: isPartOfStreak
-                    )
-                    .padding(.horizontal)
-                }
-                
-                // Legend
-                HStack(spacing: 16) {
-                    LegendItem(color: AppTheme.successColor, label: "Goals Met")
-                    LegendItem(color: AppTheme.states.attention, label: "Over Limit")
-                    LegendItem(color: AppTheme.accentColor.opacity(0.5), label: "Some Progress")
-                }
-                .font(.caption)
-                .padding(.top, 4)
-                
-                Divider()
-                    .padding(.vertical, 8)
-                
-                // Quick Stats
-                let stats = monthStats
-                if stats.total > 0 {
+                    // Legend
                     HStack(spacing: 16) {
-                        // Success rate
-                        VStack(spacing: 2) {
-                            Text("\(stats.successful)/\(stats.total)")
-                                .font(.system(.title3, design: .rounded))
-                                .fontWeight(.bold)
-                                .foregroundStyle(AppTheme.successColor)
-                            Text("Goals Met")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        
-                        Divider()
-                            .frame(height: 24)
-                        
-                        // Longest streak
-                        VStack(spacing: 2) {
-                            Text("\(stats.longestStreak)")
-                                .font(.system(.title3, design: .rounded))
-                                .fontWeight(.bold)
-                                .foregroundStyle(AppTheme.successColor)
-                            Text("Best Streak")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        LegendItem(color: AppTheme.successColor, label: "Goals Met")
+                        LegendItem(color: AppTheme.states.attention, label: "Over Limit")
+                        LegendItem(color: AppTheme.accentColor.opacity(0.5), label: "Some Progress")
                     }
-                    .padding(.vertical, 8)
-                }
-                
-                // Streak indicator
-                if currentStreak > 0 {
-                    HStack {
-                        Image(systemName: "flame.fill")
-                            .foregroundStyle(AppTheme.successColor)
-                        Text("\(currentStreak) Day Streak!")
-                            .font(.headline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(AppTheme.successColor)
-                    }
-                    .padding(.vertical, 4)
-                }
-                
-                // Day Summary (if data exists and not future date)
-                if let progress = viewModel.getProgress(for: viewModel.selectedDate),
-                   viewModel.selectedDate <= Date() {
-                    VStack(spacing: 12) {
-                        Text(viewModel.selectedDate.formatted(date: .complete, time: .omitted))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        
-                        HStack(spacing: 20) {
-                            // Calories
-                            DayStat(
-                                value: Int(progress.calories),
-                                goal: Int(Double(viewModel.dailyCalorieGoal) ?? 2000),
-                                unit: "kcal",
-                                icon: "flame.fill",
-                                color: AppTheme.ringColors.primary
-                            )
+                    .font(.caption)
+                    .padding(.top, 4)
+                    
+                    Divider()
+                        .padding(.vertical, 8)
+                    
+                    // Quick Stats
+                    let stats = monthStats
+                    if stats.total > 0 {
+                        HStack(spacing: 16) {
+                            // Success rate
+                            VStack(spacing: 2) {
+                                Text("\(stats.successful)/\(stats.total)")
+                                    .font(.system(.title3, design: .rounded))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(AppTheme.successColor)
+                                Text("Goals Met")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                             
-                            // Protein
-                            DayStat(
-                                value: Int(progress.proteins),
-                                goal: Int(Double(viewModel.dailyProteinGoal) ?? 150),
-                                unit: "g",
-                                icon: "figure.strengthtraining.traditional",
-                                color: AppTheme.ringColors.secondary
-                            )
+                            Divider()
+                                .frame(height: 24)
                             
-                            // Exercise
-                            DayStat(
-                                value: Int(progress.exerciseProgress.activeCalories),
-                                goal: Int(progress.exerciseProgress.activeCalorieGoal),
-                                unit: "kcal",
-                                icon: "heart.fill",
-                                color: AppTheme.ringColors.tertiary
-                            )
+                            // Longest streak
+                            VStack(spacing: 2) {
+                                Text("\(stats.longestStreak)")
+                                    .font(.system(.title3, design: .rounded))
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(AppTheme.successColor)
+                                Text("Best Streak")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
+                        .padding(.vertical, 8)
                     }
-                    .padding(.vertical, 8)
+                    
+                    // Streak indicator
+                    if currentStreak > 0 {
+                        HStack {
+                            Image(systemName: "flame.fill")
+                                .foregroundStyle(AppTheme.successColor)
+                            Text("\(currentStreak) Day Streak!")
+                                .font(.headline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(AppTheme.successColor)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    
+                    // Day Summary (if data exists and not future date)
+                    if let progress = viewModel.getProgress(for: viewModel.selectedDate),
+                       viewModel.selectedDate <= Date() {
+                        VStack(spacing: 12) {
+                            Text(viewModel.selectedDate.formatted(date: .complete, time: .omitted))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            HStack(spacing: 20) {
+                                // Calories
+                                DayStat(
+                                    value: Int(progress.calories),
+                                    goal: Int(Double(viewModel.dailyCalorieGoal) ?? 2000),
+                                    unit: "kcal",
+                                    icon: "flame.fill",
+                                    color: AppTheme.ringColors.primary
+                                )
+                                
+                                // Protein
+                                DayStat(
+                                    value: Int(progress.proteins),
+                                    goal: Int(Double(viewModel.dailyProteinGoal) ?? 150),
+                                    unit: "g",
+                                    icon: "figure.strengthtraining.traditional",
+                                    color: AppTheme.ringColors.secondary
+                                )
+                                
+                                // Exercise
+                                DayStat(
+                                    value: Int(progress.exerciseProgress.activeCalories),
+                                    goal: Int(progress.exerciseProgress.activeCalorieGoal),
+                                    unit: "kcal",
+                                    icon: "heart.fill",
+                                    color: AppTheme.ringColors.tertiary
+                                )
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    
+                    Spacer()
                 }
-                
-                Spacer()
+                .padding(.vertical)
+                .refreshable {
+                    await viewModel.refreshProgress()
+                }
+                .sheet(isPresented: $showingAchievements) {
+                    AchievementsView()
+                }
             }
-            .padding(.vertical)
-            .refreshable {
-                await viewModel.refreshProgress()
+            .coordinateSpace(name: "scroll")
+            .onAppear {
+                // Set initial date to today
+                let today = Calendar.current.startOfDay(for: Date())
+                viewModel.selectedDate = today
             }
-            .sheet(isPresented: $showingAchievements) {
-                AchievementsView()
+            .onChange(of: month) { _, newMonth in
+                Task {
+                    await viewModel.loadProgress()
+                }
             }
-        }
-        .onAppear {
-            // Set initial date to today
-            let today = Calendar.current.startOfDay(for: Date())
-            viewModel.selectedDate = today
-        }
-        .onChange(of: month) { _, newMonth in
-            Task {
-                await viewModel.loadProgress()
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .foodAdded)) { _ in
-            Task {
-                await viewModel.loadProgress()
+            .onReceive(NotificationCenter.default.publisher(for: .foodAdded)) { _ in
+                Task {
+                    await viewModel.loadProgress()
+                }
             }
         }
     }
@@ -320,6 +331,13 @@ struct LegendItem: View {
             Text(label)
                 .foregroundStyle(.secondary)
         }
+    }
+}
+
+private struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 
