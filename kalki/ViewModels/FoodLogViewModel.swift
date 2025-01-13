@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 public class FoodLogViewModel: ObservableObject {
     @Published private(set) var foods: [Food] = []
+    @Published var shouldShowLogo = true
     private let nutritionService: NutritionService
     private let coreDataManager: CoreDataManager
     
@@ -74,5 +75,11 @@ public class FoodLogViewModel: ObservableObject {
     
     func analyzeFood(_ description: String) async throws -> Food {
         try await nutritionService.analyzeDetailedFood(description)
+    }
+    
+    func updateScrollOffset(_ offset: CGFloat) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            shouldShowLogo = offset > -50
+        }
     }
 } 

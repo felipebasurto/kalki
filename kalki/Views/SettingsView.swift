@@ -9,6 +9,7 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationStack {
+            LogoView()
             Form {
                 Section("Profile & Goals") {
                     NavigationLink("Calculate Needs") {

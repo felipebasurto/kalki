@@ -14,6 +14,7 @@ struct FoodLogView: View {
     @AppStorage("hasSeenMealBreakdownTip") private var hasSeenMealBreakdownTip = false
     @State private var showingTip = false
     @State private var hasShownTipForToday = false
+    @State private var scrollOffset: CGFloat = 0
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -303,9 +304,21 @@ struct FoodLogView: View {
         }
     }
     
+    private var shouldShowLogo: Bool {
+        scrollOffset < 50
+    }
+    
     var body: some View {
         ZStack(alignment: .bottom) {
             ScrollView {
+                GeometryReader { geometry in
+                    Color.clear.preference(
+                        key: ScrollOffsetPreferenceKey.self,
+                        value: geometry.frame(in: .named("scroll")).minY
+                    )
+                }
+                .frame(height: 0)
+                
                 ZStack {
                     Color(.systemBackground)
                         .ignoresSafeArea()
@@ -313,6 +326,7 @@ struct FoodLogView: View {
                     VStack(spacing: 0) {
                         VStack(spacing: 16) {
                             calorieCircleView
+                                .padding(.top, 16)
                             macroProgressView
                             dateNavigationView
                             
@@ -326,6 +340,13 @@ struct FoodLogView: View {
                             Color.clear.frame(height: 80)
                         }
                     }
+                }
+            }
+            .coordinateSpace(name: "scroll")
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                scrollOffset = value
+                Task { @MainActor in
+                    viewModel.updateScrollOffset(value)
                 }
             }
             
@@ -359,6 +380,13 @@ struct FoodLogView: View {
         } message: {
             Text("Are you sure you want to delete this food entry?")
         }
+    }
+}
+
+private struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
 

@@ -13,14 +13,6 @@ struct ContentView: View {
             
         _foodLogViewModel = StateObject(wrappedValue: FoodLogViewModel(nutritionService: nutritionService))
         
-        // Set navigation bar appearance
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithDefaultBackground()
-        
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        
         // Set tab bar appearance
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithDefaultBackground()
@@ -38,39 +30,32 @@ struct ContentView: View {
                 NavigationStack {
                     TabView(selection: $selectedTab) {
                         FoodLogView(viewModel: foodLogViewModel)
+                            .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                    LogoView()
+                                        .opacity(foodLogViewModel.shouldShowLogo ? 1 : 0)
+                                }
+                            }
+                            .toolbarBackground(.hidden, for: .navigationBar)
                             .tabItem {
                                 Label("Food Log", systemImage: "list.bullet")
                             }
                             .tag(0)
-                        
-                        ProgressCalendarView(
-                            exerciseService: exerciseService,
-                            foodLogViewModel: foodLogViewModel
-                        )
-                        .tabItem {
-                            Label("Progress", systemImage: "chart.bar.fill")
-                        }
-                        .tag(1)
-                        
-                        CalcView()
-                            .tabItem {
-                                Label("Calculate", systemImage: "function")
-                            }
-                            .tag(2)
+                    
                         
                         SettingsView()
+                            .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                    Color.clear.frame(height: 8)
+                                }
+                            }
+                            .toolbarBackground(.visible, for: .navigationBar)
                             .tabItem {
                                 Label("Settings", systemImage: "gear")
                             }
                             .tag(3)
                     }
                     .tint(AppTheme.accentColor)
-                    .toolbar {
-                        ToolbarItem(placement: .principal) {
-                            LogoView()
-                        }
-                    }
-                    .toolbarBackground(.visible, for: .navigationBar)
                 }
             }
         }
