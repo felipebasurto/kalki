@@ -5,12 +5,10 @@
 //  Created by Felipe Basurto on 2025-01-13.
 //
 
-import Testing
+import XCTest
 
-struct kalkiTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+class kalkiTests: XCTestCase {
+    func testExample() {
+        XCTAssertTrue(true)
     }
-
 }
