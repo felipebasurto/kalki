@@ -1,66 +1,77 @@
 import SwiftUI
 
-public struct CalorieCircle: View {
+struct CalorieCircle: View {
     let caloriesEaten: Int
     let caloriesBurned: Int
     let calorieGoal: Int
     let mealBreakdown: [(mealType: MealType, calories: Int)]
     
     @State private var showingMealBreakdown = false
-    @State private var selectedMealType: MealType?
+    @State private var selectedMeal: MealType?
     @Environment(\.colorScheme) private var colorScheme
     
-    public init(caloriesEaten: Int, caloriesBurned: Int, calorieGoal: Int, mealBreakdown: [(mealType: MealType, calories: Int)] = []) {
-        self.caloriesEaten = caloriesEaten
-        self.caloriesBurned = caloriesBurned
-        self.calorieGoal = calorieGoal
-        self.mealBreakdown = mealBreakdown
-    }
+    private let ringWidth: Double = 20
+    private let segmentSpacing: Double = 4 // Spacing between segments in degrees
     
     private var totalProgress: Double {
         Double(caloriesEaten) / Double(calorieGoal)
     }
     
-    private var mealColors: [MealType: Color] = [
-        .breakfast: AppTheme.highlightColor,
-        .lunch: AppTheme.accentColor,
-        .dinner: AppTheme.successColor,
-        .snacks: Color("PrimaryBlue")
-    ]
+    private var mealSegments: [(startAngle: Double, endAngle: Double, color: Color)] {
+        var segments: [(startAngle: Double, endAngle: Double, color: Color)] = []
+        var currentAngle: Double = 0
+        let totalCalories = Double(caloriesEaten)
+        let activeMeals = mealBreakdown.filter { $0.calories > 0 }
+        let totalSpacing = segmentSpacing * Double(activeMeals.count - 1)
+        let availableAngle = 360.0 - totalSpacing
+        
+        for meal in activeMeals {
+            let proportion = Double(meal.calories) / totalCalories
+            let segmentAngle = availableAngle * proportion
+            
+            segments.append((
+                startAngle: currentAngle,
+                endAngle: currentAngle + segmentAngle,
+                color: meal.mealType.color
+            ))
+            
+            currentAngle += segmentAngle + segmentSpacing
+        }
+        
+        return segments
+    }
     
     private func mealColor(_ mealType: MealType) -> Color {
         if showingMealBreakdown {
-            if let selectedMeal = selectedMealType {
-                return selectedMeal == mealType ? (mealColors[mealType] ?? .gray) : Color(.systemGray4)
+            if let selectedMeal = selectedMeal {
+                return selectedMeal == mealType ? (mealType.color) : Color(.systemGray4)
             }
-            return mealColors[mealType] ?? .gray
+            return mealType.color
         }
         return AppTheme.accentColor
     }
     
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 16) {
             ZStack {
                 // Background circle
                 Circle()
                     .stroke(
                         Color(.systemGray6),
-                        lineWidth: 20
+                        lineWidth: ringWidth
                     )
                 
                 if showingMealBreakdown && !mealBreakdown.isEmpty {
                     // Meal breakdown circles
-                    ForEach(mealBreakdown.filter { $0.calories > 0 }.indices, id: \.self) { index in
-                        let activeMeals = mealBreakdown.filter { $0.calories > 0 }
-                        let meal = activeMeals[index]
-                        let startAngle = startAngle(for: index, in: activeMeals)
-                        let endAngle = endAngle(for: index, in: activeMeals)
+                    ForEach(mealBreakdown.filter { $0.calories > 0 }, id: \.mealType) { meal in
+                        let startAngle = startAngle(for: meal)
+                        let endAngle = endAngle(for: meal)
                         
                         Circle()
                             .trim(from: startAngle, to: endAngle)
                             .stroke(
                                 mealColor(meal.mealType),
-                                style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                                style: StrokeStyle(lineWidth: ringWidth, lineCap: .round)
                             )
                             .rotationEffect(.degrees(-90))
                     }
@@ -71,24 +82,23 @@ public struct CalorieCircle: View {
                         .trim(from: 0, to: min(totalProgress, 1))
                         .stroke(
                             AppTheme.accentColor,
-                            style: StrokeStyle(lineWidth: 20, lineCap: .round)
+                            style: StrokeStyle(lineWidth: ringWidth, lineCap: .round)
                         )
                         .rotationEffect(.degrees(-90))
-                        .transition(.opacity)
                 }
                 
                 // Center content
                 VStack(spacing: 4) {
                     if showingMealBreakdown {
-                        if let selectedMeal = selectedMealType,
+                        if let selectedMeal = selectedMeal,
                            let mealData = mealBreakdown.first(where: { $0.mealType == selectedMeal }) {
                             Text(mealData.mealType.rawValue)
                                 .font(.headline)
-                                .foregroundStyle(mealColors[mealData.mealType] ?? .secondary)
+                                .foregroundStyle(mealColor(mealData.mealType))
                             
                             Text("\(mealData.calories)")
                                 .font(.system(size: 36, weight: .bold))
-                                .foregroundStyle(mealColors[mealData.mealType] ?? .secondary)
+                                .foregroundStyle(mealColor(mealData.mealType))
                             
                             Text("kcal")
                                 .font(.subheadline)
@@ -118,15 +128,14 @@ public struct CalorieCircle: View {
                             .padding(.top, 4)
                     }
                 }
-                .transition(.opacity)
             }
             .frame(height: 200)
             .padding()
             .contentShape(Rectangle())
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    if selectedMealType != nil {
-                        selectedMealType = nil
+                    if selectedMeal != nil {
+                        selectedMeal = nil
                     } else {
                         showingMealBreakdown.toggle()
                     }
@@ -139,10 +148,10 @@ public struct CalorieCircle: View {
                     ForEach(mealBreakdown.filter { $0.calories > 0 }, id: \.mealType) { meal in
                         Button {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                if selectedMealType == meal.mealType {
-                                    selectedMealType = nil
+                                if selectedMeal == meal.mealType {
+                                    selectedMeal = nil
                                 } else {
-                                    selectedMealType = meal.mealType
+                                    selectedMeal = meal.mealType
                                 }
                             }
                         } label: {
@@ -153,13 +162,13 @@ public struct CalorieCircle: View {
                                 
                                 Text(meal.mealType.rawValue)
                                     .font(.subheadline)
-                                    .foregroundStyle(selectedMealType == nil || selectedMealType == meal.mealType ? .primary : .secondary)
+                                    .foregroundStyle(selectedMeal == nil || selectedMeal == meal.mealType ? .primary : .secondary)
                                 
                                 Spacer()
                                 
                                 Text("\(meal.calories) kcal")
                                     .font(.subheadline)
-                                    .foregroundStyle(selectedMealType == nil || selectedMealType == meal.mealType ? .secondary : .tertiary)
+                                    .foregroundStyle(selectedMeal == nil || selectedMeal == meal.mealType ? .secondary : .tertiary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -171,23 +180,50 @@ public struct CalorieCircle: View {
         }
     }
     
-    private func startAngle(for index: Int, in activeMeals: [(mealType: MealType, calories: Int)]) -> Double {
+    private func startAngle(for meal: (mealType: MealType, calories: Int)) -> Double {
+        let activeMeals = mealBreakdown.filter { $0.calories > 0 }
+        guard let index = activeMeals.firstIndex(where: { $0.mealType == meal.mealType }) else { return 0 }
+        
         let totalCalories = Double(caloriesEaten)
         let previousCalories = activeMeals[..<index].reduce(0) { $0 + Double($1.calories) }
         return previousCalories / totalCalories
     }
     
-    private func endAngle(for index: Int, in activeMeals: [(mealType: MealType, calories: Int)]) -> Double {
+    private func endAngle(for meal: (mealType: MealType, calories: Int)) -> Double {
+        let activeMeals = mealBreakdown.filter { $0.calories > 0 }
+        guard let index = activeMeals.firstIndex(where: { $0.mealType == meal.mealType }) else { return 0 }
+        
         let totalCalories = Double(caloriesEaten)
         let previousCalories = activeMeals[..<(index + 1)].reduce(0) { $0 + Double($1.calories) }
         return previousCalories / totalCalories
     }
 }
 
+extension MealType {
+    var color: Color {
+        switch self {
+        case .breakfast:
+            return AppTheme.highlightColor
+        case .lunch:
+            return AppTheme.accentColor
+        case .dinner:
+            return AppTheme.successColor
+        case .snacks:
+            return AppTheme.purpleColor
+        }
+    }
+}
+
 #Preview {
     CalorieCircle(
-        caloriesEaten: 3143,
-        caloriesBurned: 651,
-        calorieGoal: 2500
+        caloriesEaten: 1500,
+        caloriesBurned: 500,
+        calorieGoal: 2000,
+        mealBreakdown: [
+            (.breakfast, 400),
+            (.lunch, 600),
+            (.dinner, 400),
+            (.snacks, 100)
+        ]
     )
 } 

@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreData
 
 /// ProgressCalendarView provides a user interface for tracking progress over time.
 struct ProgressCalendarView: View {
@@ -334,16 +335,6 @@ struct LegendItem: View {
     }
 }
 
-private struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
-
 #Preview {
-    ProgressCalendarView(
-        exerciseService: MockExerciseService(),
-        foodLogViewModel: FoodLogViewModel(nutritionService: MockNutritionService())
-    )
+    ProgressCalendarView(exerciseService: MockExerciseService(), foodLogViewModel: FoodLogViewModel())
 } 

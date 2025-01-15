@@ -5,6 +5,7 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @StateObject private var foodLogViewModel: FoodLogViewModel
     @StateObject private var exerciseService = MockExerciseService()
+    @State private var logoOpacity: Double = 1.0
     
     init() {
         let nutritionService: NutritionService = AppConfig.hasValidOpenAIKey 
@@ -20,6 +21,15 @@ struct ContentView: View {
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
         UITabBar.appearance().tintColor = UIColor(AppTheme.accentColor)
+        
+        // Optimize initial view loading
+        if #available(iOS 15.0, *) {
+            do {
+                UIView.setAnimationsEnabled(false)
+                do { UIView.setAnimationsEnabled(true) }
+                // Any additional setup code can go here
+            }
+        }
     }
     
     var body: some View {
@@ -32,8 +42,7 @@ struct ContentView: View {
                         FoodLogView(viewModel: foodLogViewModel)
                             .toolbar {
                                 ToolbarItem(placement: .principal) {
-                                    LogoView()
-                                        .opacity(foodLogViewModel.shouldShowLogo ? 1 : 0)
+                                    LogoView(opacity: logoOpacity)
                                 }
                             }
                     }
@@ -45,6 +54,11 @@ struct ContentView: View {
                     NavigationStack {
                         ProgressCalendarView(exerciseService: exerciseService, foodLogViewModel: foodLogViewModel)
                             .navigationBarTitleDisplayMode(.inline)
+                            .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                    LogoView(opacity: logoOpacity)
+                                }
+                            }
                     }
                     .tabItem {
                         Label("Progress", systemImage: "calendar")
@@ -53,6 +67,11 @@ struct ContentView: View {
                     
                     NavigationStack {
                         SettingsView()
+                            .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                    LogoView(opacity: logoOpacity)
+                                }
+                            }
                     }
                     .tabItem {
                         Label("Settings", systemImage: "gear")

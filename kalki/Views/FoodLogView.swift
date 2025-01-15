@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreData
 
 struct FoodLogView: View {
     @ObservedObject var viewModel: FoodLogViewModel
@@ -336,7 +337,9 @@ struct FoodLogView: View {
         }
         .coordinateSpace(name: "scroll")
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-            viewModel.updateScrollOffset(value)
+            Task { @MainActor in
+                viewModel.updateScrollOffset(value)
+            }
         }
         .overlay(alignment: .bottom) {
             addButton
@@ -377,13 +380,6 @@ struct FoodLogView: View {
         } message: {
             Text("Are you sure you want to delete this food entry?")
         }
-    }
-}
-
-private struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
     }
 }
 
