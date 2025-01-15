@@ -117,7 +117,7 @@ struct ProgressCalendarGrid: View {
                             isPartOfStreak: isPartOfStreak(date),
                             onSelect: {
                                 if date <= Date() {
-                                    withAnimation {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
                                         selectedDate = date
                                     }
                                 }
@@ -160,7 +160,7 @@ private struct CalendarCell: View {
     let onSelect: () -> Void
     
     var body: some View {
-        Button(action: onSelect) {
+        Button(action: onSelect, label: {
             ProgressCalendarCell(
                 date: date,
                 progress: progress,
@@ -169,7 +169,8 @@ private struct CalendarCell: View {
                 isPartOfStreak: isPartOfStreak,
                 isSelected: Calendar.current.isDate(date, inSameDayAs: selectedDate)
             )
-        }
+        })
+        .buttonStyle(.plain)
     }
 }
 
@@ -217,11 +218,13 @@ struct MilestoneCelebration: View {
                     .fontWeight(.bold)
                     .foregroundStyle(AppTheme.text.primary)
                 
-                Button("Awesome!") {
+                Button(action: {
                     withAnimation {
                         onDismiss()
                     }
-                }
+                }, label: {
+                    Text("Awesome!")
+                })
                 .buttonStyle(.borderedProminent)
             }
             .padding(24)

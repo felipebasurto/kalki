@@ -22,6 +22,15 @@ struct ContentView: View {
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
         UITabBar.appearance().tintColor = UIColor(AppTheme.accentColor)
         
+        // Configure navigation bar appearance
+        let navigationBarAppearance = UINavigationBarAppearance()
+        navigationBarAppearance.configureWithDefaultBackground()
+        navigationBarAppearance.backgroundColor = .systemBackground
+        
+        UINavigationBar.appearance().standardAppearance = navigationBarAppearance
+        UINavigationBar.appearance().compactAppearance = navigationBarAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
+        
         // Optimize initial view loading
         if #available(iOS 15.0, *) {
             do {
@@ -43,6 +52,7 @@ struct ContentView: View {
                             .toolbar {
                                 ToolbarItem(placement: .principal) {
                                     LogoView(opacity: logoOpacity)
+                                        .frame(maxWidth: .infinity, alignment: .center)
                                 }
                             }
                     }

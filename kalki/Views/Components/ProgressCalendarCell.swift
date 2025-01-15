@@ -78,7 +78,7 @@ struct ProgressCalendarCell: View {
                 AchievementBubble(text: "Wow! You burned 1000+ calories! 🔥")
                     .offset(y: -50)
                     .onTapGesture {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
                             hasSeenExerciseAchievement = true
                         }
                     }

@@ -16,8 +16,9 @@
 
 ## 3. Code Quality
 1. **Correct & Updated:** Code must be functional, secure, and error-free.  
-2. **Readability Over Performance:** Clear structure and naming. Apply DRY to avoid redundancy.  
-3. **Verification:** Thoroughly review your code. Include all necessary imports.
+2. **Simplify and Divide:** Always ensure that everything you build is highly atomized, divided into small components, and reusable.  
+3. **Readability Over Performance:** Clear structure and naming. Apply DRY to avoid redundancy.  
+4. **Verification:** Thoroughly review your code. Include all necessary imports.
 
 ---
 

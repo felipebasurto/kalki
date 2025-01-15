@@ -10,6 +10,8 @@ struct AddFoodView: View {
     @State private var isAnalyzing = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showingFoodAdded = false
+    @State private var analyzedFood: Food?
     @FocusState private var isFoodNameFocused: Bool
     
     var body: some View {
@@ -36,9 +38,16 @@ struct AddFoodView: View {
                     Section {
                         HStack {
                             Spacer()
-                            ProgressView("Analyzing food...")
+                            AIAnalyzingAnimation()
                             Spacer()
                         }
+                    }
+                }
+                
+                if let food = analyzedFood {
+                    Section {
+                        FoodAnalysisCard(food: food)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
             }
@@ -62,15 +71,24 @@ struct AddFoodView: View {
                 }
                 
                 ToolbarItem(placement: .keyboard) {
-                    Button("Done") {
-                        isFoodNameFocused = false
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            isFoodNameFocused = false
+                        }
                     }
                 }
             }
+            .toolbarBackground(.visible, for: .navigationBar)
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(errorMessage)
+            }
+            .overlay {
+                if showingFoodAdded {
+                    FoodAddedAnimation()
+                }
             }
         }
         .interactiveDismissDisabled(isAnalyzing)
@@ -99,9 +117,29 @@ struct AddFoodView: View {
         Task {
             isAnalyzing = true
             do {
+                // First analyze the food
+                let analyzed = try await viewModel.analyzeFood(foodName)
+                withAnimation {
+                    analyzedFood = Food(
+                        name: analyzed.name,
+                        calories: analyzed.calories,
+                        protein: analyzed.protein,
+                        carbs: analyzed.carbs,
+                        fats: analyzed.fats,
+                        servingSize: analyzed.servingSize,
+                        timestamp: timestamp,
+                        mealType: selectedMealType
+                    )
+                }
+                
+                // Then add it to the log
                 try await viewModel.addFood(foodName, mealType: selectedMealType, timestamp: timestamp)
-                isFoodNameFocused = false
-                dismiss()
+                showingFoodAdded = true
+                // Dismiss after animation completes
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    isFoodNameFocused = false
+                    dismiss()
+                }
             } catch {
                 errorMessage = error.localizedDescription
                 showError = true

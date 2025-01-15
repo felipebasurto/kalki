@@ -150,11 +150,15 @@ struct EditFoodView: View {
                 }
                 
                 ToolbarItem(placement: .keyboard) {
-                    Button("Done") {
-                        focusedField = nil
+                    HStack {
+                        Spacer()
+                        Button("Done") {
+                            focusedField = nil
+                        }
                     }
                 }
             }
+            .toolbarBackground(.visible, for: .navigationBar)
         }
     }
 }
