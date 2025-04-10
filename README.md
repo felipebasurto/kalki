@@ -1,5 +1,9 @@
 # Kalki
 
+![image](https://github.com/user-attachments/assets/1c4b58cb-472f-4f1d-938c-c06f7ca77262)
+![image](https://github.com/user-attachments/assets/35da74f8-827f-4683-8a58-f66b2ef2719d)
+
+
 Kalki is a feature-rich iOS application built with SwiftUI and Core Data that helps users track their nutrition, exercise, and overall health. The app provides detailed food logging, weight tracking, personalized goals, and an achievements system—all wrapped in a polished, responsive interface.
 
 > **Project Status:** *Halfway done.*  
